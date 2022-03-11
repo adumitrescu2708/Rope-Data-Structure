@@ -1,0 +1,76 @@
+NUME #1: Cornea Alexandra
+NUME #2: Dumitrescu Alexandra
+GRUPA: 313CA
+
+
+------------ TEMA #3 - Rope Data Structure ---------
+
+
+Fiecare nod din Rope are retinut:
+
+ * un string  - fie atribuit in functia de CREATE daca e frunza
+			  - fie EMPTY in caz contrar
+ * o greutate - lungimea stringului daca e frunza
+			  - lungimea stringului memorat in subarborele stang (1)
+Vezi si: Ref: (2) rope.c
+
+
+Prin atribuirea greutatii se eficientizeaza operatia de SEARCH/INDEX:
+	* din (1) => Daca vrem sa extragem un idx din string incepem o cautare
+				 recursiva din radacina. La fiecare pas verificam:
+				 - daca nodul are o greutate mai mare decat indexul =>
+				   indexul cautat se afla in subarborele stang
+				 - daca nodul are o greutate mai mica decat indexul =>
+				   indexul cautat se afla in subarborele drept, iar
+				   indexul trebuie actualizat (index = index - greutate)
+Vezi si: Ref: (4) rope.c
+
+
+Operatia de CONCAT primeste 2 rope-uri si formeaza un nou rope astfel:
+ *     new_root        | Aloca memorie pentru o noua radacina si ii atribuie
+ *      /    \         | ca fiu stang radacina primului rope, iar ca fiu drept
+ *  root#1  root#2     | radacina celui de-al 2-lea.
+
+
+Operatia de SPLIT se imparte in 3 sub-probleme:
+A) NU se urmareste distrugerea rope-ului initial.
+   Ne folosim de o clona a arborelui. Astfel, s-a implementat
+   o functie ce parcurge recursiv arborele si il copiaza in unul nou.
+   (Vezi si: Ref: (5) rope.c)
+
+B) Inainte de split-ul efectiv verificam daca nu se modifica arborele
+ *              3       | Split(2)   ->   idx = 2
+ *             / \      | Se cauta frunza de unde se incepe split-ul
+ *            3   1     | Daca idx < greutate(frunza) => trebuie rupta frunza
+ *           abc  d     | astfel:
+ *
+ *              3       | Se procedeaza IDEM concat
+ *             / \      | Prima frunza va contine primele idx caractere
+ *            2   1     | iar cea de-a doua restul. Nodul initial isi pierde
+ *           / \  d     | stringul, devine EMPTY.
+ *          ab  c
+
+C) Se imparte clona in 2 subarbori.
+ *      subarborele stang - contine doar nodurile aflate la stanga
+ *                          lantului parcurs de la radacina pana la frunza
+ *                          impreuna cu nodurile din lant
+ *
+ *      subarborele drept - contine toti descendentii aflati la dreapta
+ *                          nodurilor din lant, care sunt concatenati
+ *                          pentru a construi tot un rope.
+ Se parcurge recursiv arborele cu un nod si parintele sau. O data ajuns la
+ radacina, verificam daca nodul este fiul stang al parintelui, caz in care
+ parintele isi pierde fiul drept care se concateneaza la pair.right. La
+ intoarcerea din recursivitate se actualizeaza inaltimea parintelui si se
+ verifica la fel.
+ In final, pair.right este cel contruit in apelul recursiv, iar pair.left
+ este ce a ramas din arbore.
+ Vezi si: Ref: (5) (6) (7) rope.c
+
+Operatia de INSERT se reduce la aplicarea unui split si a doua concatenari.
+Se concateneaza la pair.left un nou nod ce contine stringul pe care vrem sa
+il adaugam, iar apoi se concateneaza la radacina rezultata pair.right.
+
+Operatia de DELETE este asemanatoare. Se aplica 2 splituri asupra ropeului
+la indexii trimiti ca parametrii, apoi se concateneaza pair1.left cu
+pair2.right, restul memoriei fiind eliberate.
